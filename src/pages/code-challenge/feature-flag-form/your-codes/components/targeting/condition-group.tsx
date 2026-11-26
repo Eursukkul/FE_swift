@@ -15,6 +15,10 @@ import { COMBINATORS } from '../../model/schema'
 import type { Group } from '../../model/schema'
 import type { FlagForm } from '../../use-flag-form'
 import { FieldError } from '../form-field'
+import { DragHandle } from '../reorder/drag-handle'
+import { DRAG_STATES } from '../reorder/drag-states'
+import { useReorder } from '../reorder/use-reorder'
+import type { HandleProps } from '../reorder/use-reorder'
 import { ConditionRow } from './condition-row'
 import { asGroupPath, childPath } from './paths'
 import type { GroupPath } from './paths'
@@ -23,6 +27,8 @@ type ConditionGroupProps = {
   form: FlagForm
   path: GroupPath
   depth: number
+  /** Nested groups only: their position in the parent group. */
+  handle?: HandleProps
   onRemove?: () => void
 }
 
@@ -31,8 +37,14 @@ export function ConditionGroup({
   form,
   path,
   depth,
+  handle,
   onRemove,
 }: ConditionGroupProps) {
+  const reorder = useReorder({
+    count: () => form.getFieldValue(`${path}.children`).length,
+    onMove: (from, to) => form.moveFieldValues(`${path}.children`, from, to),
+  })
+
   return (
     <div
       role="group"
@@ -47,6 +59,7 @@ export function ConditionGroup({
         {(children) => (
           <>
             <div className="flex flex-wrap items-center gap-2">
+              {handle && <DragHandle {...handle} />}
               <form.Field name={`${path}.combinator`}>
                 {(field) => (
                   <Select
@@ -107,25 +120,40 @@ export function ConditionGroup({
             </div>
 
             {/* Index keys keep each mounted field bound to one path; an id key would move a field to a new
-                path and it would read the removed item for a render (TanStack's documented array pattern). */}
+                path and it would read the removed item for a render (TanStack's documented array pattern).
+                A move re-validates, which re-renders this list, so a slot switches between condition and
+                group after reordering (covered by reorder.test.tsx). */}
             {children.state.value.map((child, index) => {
               const node = childPath(path, index)
               const remove = () => children.removeValue(index)
-              return child.type === 'group' ? (
-                <ConditionGroup
+              const isGroup = child.type === 'group'
+              const handle = reorder.handleProps(
+                index,
+                `${isGroup ? 'group' : 'condition'} ${index + 1}`,
+              )
+              return (
+                <div
                   key={index}
-                  form={form}
-                  path={asGroupPath(node)}
-                  depth={depth + 1}
-                  onRemove={remove}
-                />
-              ) : (
-                <ConditionRow
-                  key={index}
-                  form={form}
-                  path={node}
-                  onRemove={remove}
-                />
+                  {...reorder.itemProps(index)}
+                  className={cn('rounded-lg', DRAG_STATES)}
+                >
+                  {isGroup ? (
+                    <ConditionGroup
+                      form={form}
+                      path={asGroupPath(node)}
+                      depth={depth + 1}
+                      handle={handle}
+                      onRemove={remove}
+                    />
+                  ) : (
+                    <ConditionRow
+                      form={form}
+                      path={node}
+                      handle={handle}
+                      onRemove={remove}
+                    />
+                  )}
+                </div>
               )
             })}
 

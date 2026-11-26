@@ -31,11 +31,16 @@ export const newRule = (variationId: string): Rule => ({
   percentage: 100,
 })
 
-export const newVariation = (type: FlagType, index: number): Variation => ({
-  id: newId(),
-  name: `variation_${index + 1}`,
-  value: initialValue(type),
-})
+/** Names the variation `variation_<n>` with the first n not already taken. */
+export function newVariation(
+  type: FlagType,
+  existing: ReadonlyArray<Variation>,
+): Variation {
+  const taken = new Set(existing.map((v) => v.name.trim()))
+  let n = existing.length + 1
+  while (taken.has(`variation_${n}`)) n++
+  return { id: newId(), name: `variation_${n}`, value: initialValue(type) }
+}
 
 export function initialValue(type: FlagType) {
   return { boolean: 'false', string: '', number: '0', json: '{}' }[type]

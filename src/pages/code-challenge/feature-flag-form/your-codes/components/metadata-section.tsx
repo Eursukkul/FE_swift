@@ -16,7 +16,8 @@ import {
 import { Switch } from '#/components/ui/switch'
 import { Textarea } from '#/components/ui/textarea'
 
-import { FLAG_TYPES } from '../model/schema'
+import { initialValue } from '../model/defaults'
+import { FLAG_TYPES, variationValueError } from '../model/schema'
 import type { FlagType } from '../model/schema'
 import type { FlagForm } from '../use-flag-form'
 import { invalidProps } from './field-errors'
@@ -59,7 +60,22 @@ export function MetadataSection({ form }: { form: FlagForm }) {
           )}
         </form.Field>
 
-        <form.Field name="type">
+        <form.Field
+          name="type"
+          listeners={{
+            // Values that cannot be read as the new type start over from that type's default.
+            onChange: ({ value: flagType }) => {
+              form.getFieldValue('variations').forEach((variation, index) => {
+                if (variationValueError(flagType, variation.value)) {
+                  form.setFieldValue(
+                    `variations[${index}].value`,
+                    initialValue(flagType),
+                  )
+                }
+              })
+            },
+          }}
+        >
           {(field) => (
             <FormField
               label="Flag type"

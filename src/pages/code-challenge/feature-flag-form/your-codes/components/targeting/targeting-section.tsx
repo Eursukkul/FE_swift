@@ -12,10 +12,16 @@ import {
 import { newRule } from '../../model/defaults'
 import { COMMON_ATTRIBUTES } from '../../model/operators'
 import type { FlagForm } from '../../use-flag-form'
+import { useReorder } from '../reorder/use-reorder'
 import { ATTRIBUTE_LIST_ID } from './paths'
 import { RuleCard } from './rule-card'
 
 export function TargetingSection({ form }: { form: FlagForm }) {
+  const reorder = useReorder({
+    count: () => form.getFieldValue('targeting').length,
+    onMove: (from, to) => form.moveFieldValues('targeting', from, to),
+  })
+
   return (
     <Card>
       <CardHeader>
@@ -40,6 +46,7 @@ export function TargetingSection({ form }: { form: FlagForm }) {
                   key={index}
                   form={form}
                   index={index}
+                  reorder={reorder}
                   onRemove={() => rules.removeValue(index)}
                 />
               ))}

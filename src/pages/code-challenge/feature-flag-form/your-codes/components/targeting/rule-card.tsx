@@ -3,31 +3,42 @@ import { Trash2 } from 'lucide-react'
 import { Button } from '#/components/ui/button'
 import { Input } from '#/components/ui/input'
 
+import { cn } from '#/lib/utils'
+
 import { buildQuery } from '../../model/build-query'
 import { asFlagValues } from '../../use-flag-form'
 import type { FlagForm } from '../../use-flag-form'
 import { invalidProps } from '../field-errors'
 import { FormField } from '../form-field'
+import { DragHandle } from '../reorder/drag-handle'
+import { DRAG_STATES } from '../reorder/drag-states'
+import type { Reorder } from '../reorder/use-reorder'
 import { VariationSelect } from '../variation-select'
 import { ConditionGroup } from './condition-group'
 
 type RuleCardProps = {
   form: FlagForm
   index: number
+  reorder: Reorder
   onRemove: () => void
 }
 
-export function RuleCard({ form, index, onRemove }: RuleCardProps) {
+export function RuleCard({ form, index, reorder, onRemove }: RuleCardProps) {
   const rule = `targeting[${index}]` as const
   const title = `Rule ${index + 1}`
 
   return (
     <article
       aria-label={title}
-      className="grid gap-4 rounded-lg border border-border p-4"
+      {...reorder.itemProps(index)}
+      className={cn(
+        'grid gap-4 rounded-lg border border-border bg-card p-4 transition-shadow',
+        DRAG_STATES,
+      )}
     >
-      <header className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">{title}</h3>
+      <header className="flex items-center gap-1">
+        <DragHandle {...reorder.handleProps(index, title)} />
+        <h3 className="mr-auto text-sm font-medium">{title}</h3>
         <Button
           type="button"
           variant="ghost"
@@ -71,7 +82,7 @@ export function RuleCard({ form, index, onRemove }: RuleCardProps) {
                 id={field.name}
                 value={field.state.value}
                 onChange={field.handleChange}
-                invalid={field.state.meta.errors.length > 0}
+                {...invalidProps(field.name, field.state.meta.errors)}
               />
             </FormField>
           )}

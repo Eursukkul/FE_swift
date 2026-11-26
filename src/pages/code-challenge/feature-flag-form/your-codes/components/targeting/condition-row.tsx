@@ -15,18 +15,27 @@ import type { Operator } from '../../model/operators'
 import type { FlagForm } from '../../use-flag-form'
 import { invalidProps } from '../field-errors'
 import { FieldError } from '../form-field'
+import { DragHandle } from '../reorder/drag-handle'
+import type { HandleProps } from '../reorder/use-reorder'
 import { ATTRIBUTE_LIST_ID } from './paths'
 import type { NodePath } from './paths'
 
 type ConditionRowProps = {
   form: FlagForm
   path: NodePath
+  handle: HandleProps
   onRemove: () => void
 }
 
-export function ConditionRow({ form, path, onRemove }: ConditionRowProps) {
+export function ConditionRow({
+  form,
+  path,
+  handle,
+  onRemove,
+}: ConditionRowProps) {
   return (
-    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_11rem_minmax(0,1fr)_auto] sm:items-start">
+    <div className="grid gap-2 sm:grid-cols-[auto_minmax(0,1fr)_11rem_minmax(0,1fr)_auto] sm:items-start">
+      <DragHandle {...handle} className="mt-0.5 hidden sm:inline-flex" />
       <form.Field name={`${path}.attribute`}>
         {(field) => (
           <div className="grid gap-1">

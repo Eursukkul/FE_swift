@@ -8,39 +8,14 @@ import {
 } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { choose, errorFor, type } from '../../test-utils'
 import { FlagEditor } from '../flag-editor'
-
-// jsdom has no ResizeObserver; Radix measures some controls with it.
-globalThis.ResizeObserver ??= class {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
 
 afterEach(cleanup)
 
 const rule = (name: string) => screen.getByRole('article', { name })
 const queryOf = (name: string) =>
   screen.getByLabelText(`${name} query`).textContent
-
-const errorFor = (input: HTMLElement) =>
-  document.getElementById(input.getAttribute('aria-describedby') ?? '')
-    ?.textContent
-
-function type(input: HTMLElement, value: string) {
-  fireEvent.change(input, { target: { value } })
-}
-
-// jsdom lacks the scrolling API Radix Select calls when it opens.
-Element.prototype.scrollIntoView ??= () => {}
-
-/** Opens a Radix Select with the keyboard and picks an option, as a keyboard user would. */
-function choose(trigger: HTMLElement, option: string) {
-  fireEvent.keyDown(trigger, { key: 'Enter' })
-  fireEvent.keyDown(screen.getByRole('option', { name: option }), {
-    key: 'Enter',
-  })
-}
 
 describe('TargetingSection', () => {
   it('starts with the rule from expected.json', () => {

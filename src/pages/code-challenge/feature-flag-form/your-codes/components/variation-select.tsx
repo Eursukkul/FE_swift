@@ -13,22 +13,26 @@ type VariationSelectProps = {
   id: string
   value: string
   onChange: (variationId: string) => void
-  invalid: boolean
+  'aria-invalid': boolean
+  'aria-describedby': string | undefined
 }
 
 /** Options track the variation list live; the value is a variation id so renames never break it. */
 export function VariationSelect({
   form,
-  id,
   value,
   onChange,
-  invalid,
+  ...triggerProps
 }: VariationSelectProps) {
   return (
     <form.Subscribe selector={(state) => state.values.variations}>
       {(variations) => (
-        <Select value={value} onValueChange={onChange}>
-          <SelectTrigger id={id} aria-invalid={invalid} className="w-full">
+        // A removed variation falls back to '' so the placeholder shows next to the error.
+        <Select
+          value={variations.some((v) => v.id === value) ? value : ''}
+          onValueChange={onChange}
+        >
+          <SelectTrigger {...triggerProps} className="w-full">
             <SelectValue placeholder="Select a variation" />
           </SelectTrigger>
           <SelectContent>
