@@ -12,6 +12,8 @@ import { toOutput } from '../../model/to-output'
 import { asFlagValues } from '../../use-flag-form'
 import type { FlagForm } from '../../use-flag-form'
 
+const EDITOR_THEME = 'flag-preview'
+
 const EDITOR_OPTIONS = {
   readOnly: true,
   domReadOnly: true,
@@ -65,7 +67,16 @@ export function JsonPreview({ form }: { form: FlagForm }) {
             <Editor
               height="min(60vh, 34rem)"
               language="json"
-              theme="vs-dark"
+              theme={EDITOR_THEME}
+              beforeMount={(monaco) =>
+                monaco.editor.defineTheme(EDITOR_THEME, {
+                  base: 'vs-dark',
+                  inherit: true,
+                  rules: [],
+                  // Tailwind slate-950, the panel's background.
+                  colors: { 'editor.background': '#020617' },
+                })
+              }
               value={json}
               options={EDITOR_OPTIONS}
               loading={

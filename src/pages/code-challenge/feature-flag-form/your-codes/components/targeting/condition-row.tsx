@@ -34,8 +34,10 @@ export function ConditionRow({
   onRemove,
 }: ConditionRowProps) {
   return (
-    <div className="grid gap-2 sm:grid-cols-[auto_minmax(0,1fr)_11rem_minmax(0,1fr)_auto] sm:items-start">
-      <DragHandle {...handle} className="mt-0.5 hidden sm:inline-flex" />
+    // Lays out by the width of its group (container query), not the screen: nested groups are narrower.
+    // When stacked, an outline keeps one condition's fields together.
+    <div className="grid gap-2 rounded-md border border-border p-2 @lg:grid-cols-[auto_minmax(0,1fr)_11rem_minmax(0,1fr)_auto] @lg:items-start @lg:border-0 @lg:p-0">
+      <DragHandle {...handle} className="mt-0.5 hidden @lg:inline-flex" />
       <form.Field name={`${path}.attribute`}>
         {(field) => (
           <div className="grid gap-1">

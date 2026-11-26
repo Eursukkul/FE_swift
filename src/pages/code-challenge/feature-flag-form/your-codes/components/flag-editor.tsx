@@ -9,7 +9,8 @@ export function FlagEditor() {
   const form = useFlagForm()
 
   return (
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
+    // grid-cols-1 caps the track at the screen width; an auto track would grow to Monaco's last measured width.
+    <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,30rem)]">
       <form
         noValidate
         onSubmit={(e) => {

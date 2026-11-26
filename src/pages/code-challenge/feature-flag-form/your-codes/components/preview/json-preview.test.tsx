@@ -22,9 +22,7 @@ vi.mock('@monaco-editor/react', () => ({
 afterEach(cleanup)
 
 const output = () =>
-  JSON.parse(
-    (screen.getByLabelText('Output JSON') as HTMLTextAreaElement).value,
-  )
+  JSON.parse(screen.getByLabelText<HTMLTextAreaElement>('Output JSON').value)
 const preview = () =>
   within(screen.getByRole('region', { name: 'JSON preview' }))
 

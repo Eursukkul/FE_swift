@@ -88,7 +88,7 @@ export function ConditionGroup({
               <span className="text-xs text-muted-foreground">
                 {depth === 0 ? 'Match users where' : 'Nested group'}
               </span>
-              <div className="ml-auto flex gap-1">
+              <div className="ml-auto flex flex-wrap justify-end gap-1">
                 <Button
                   type="button"
                   variant="outline"
@@ -127,7 +127,7 @@ export function ConditionGroup({
               const node = childPath(path, index)
               const remove = () => children.removeValue(index)
               const isGroup = child.type === 'group'
-              const handle = reorder.handleProps(
+              const childHandle = reorder.handleProps(
                 index,
                 `${isGroup ? 'group' : 'condition'} ${index + 1}`,
               )
@@ -135,21 +135,21 @@ export function ConditionGroup({
                 <div
                   key={index}
                   {...reorder.itemProps(index)}
-                  className={cn('rounded-lg', DRAG_STATES)}
+                  className={cn('@container rounded-lg', DRAG_STATES)}
                 >
                   {isGroup ? (
                     <ConditionGroup
                       form={form}
                       path={asGroupPath(node)}
                       depth={depth + 1}
-                      handle={handle}
+                      handle={childHandle}
                       onRemove={remove}
                     />
                   ) : (
                     <ConditionRow
                       form={form}
                       path={node}
-                      handle={handle}
+                      handle={childHandle}
                       onRemove={remove}
                     />
                   )}

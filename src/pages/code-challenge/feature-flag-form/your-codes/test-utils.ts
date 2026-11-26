@@ -2,12 +2,12 @@ import { fireEvent, screen } from '@testing-library/react'
 
 // jsdom lacks browser APIs that Radix calls: ResizeObserver to measure controls,
 // scrollIntoView when a Select opens.
-globalThis.ResizeObserver ??= class {
+globalThis.ResizeObserver = class {
   observe() {}
   unobserve() {}
   disconnect() {}
 }
-Element.prototype.scrollIntoView ??= () => {}
+Element.prototype.scrollIntoView = () => {}
 
 export function type(input: HTMLElement, value: string) {
   fireEvent.change(input, { target: { value } })
