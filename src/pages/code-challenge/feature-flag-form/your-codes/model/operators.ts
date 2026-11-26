@@ -15,6 +15,17 @@ export const OPERATORS = {
 
 export type Operator = keyof typeof OPERATORS
 
+/** Evaluation-context attributes offered as suggestions; any attribute name is allowed. */
+export const COMMON_ATTRIBUTES = [
+  'key',
+  'group',
+  'role',
+  'email',
+  'country',
+  'plan',
+  'env',
+]
+
 export const OPERATOR_KEYS = Object.keys(OPERATORS) as [
   Operator,
   ...Array<Operator>,

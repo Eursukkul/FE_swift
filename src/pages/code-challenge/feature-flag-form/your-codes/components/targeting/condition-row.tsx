@@ -1,0 +1,114 @@
+import { X } from 'lucide-react'
+
+import { Button } from '#/components/ui/button'
+import { Input } from '#/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
+
+import { OPERATORS, OPERATOR_KEYS } from '../../model/operators'
+import type { Operator } from '../../model/operators'
+import type { FlagForm } from '../../use-flag-form'
+import { invalidProps } from '../field-errors'
+import { FieldError } from '../form-field'
+import { ATTRIBUTE_LIST_ID } from './paths'
+import type { NodePath } from './paths'
+
+type ConditionRowProps = {
+  form: FlagForm
+  path: NodePath
+  onRemove: () => void
+}
+
+export function ConditionRow({ form, path, onRemove }: ConditionRowProps) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_11rem_minmax(0,1fr)_auto] sm:items-start">
+      <form.Field name={`${path}.attribute`}>
+        {(field) => (
+          <div className="grid gap-1">
+            <Input
+              aria-label="Attribute"
+              list={ATTRIBUTE_LIST_ID}
+              placeholder="attribute, e.g. role"
+              autoComplete="off"
+              {...invalidProps(field.name, field.state.meta.errors)}
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(e) => field.handleChange(e.target.value)}
+            />
+            <FieldError
+              fieldName={field.name}
+              errors={field.state.meta.errors}
+            />
+          </div>
+        )}
+      </form.Field>
+
+      <form.Field name={`${path}.operator`}>
+        {(operator) => (
+          <>
+            <Select
+              value={operator.state.value}
+              onValueChange={(value) =>
+                operator.handleChange(value as Operator)
+              }
+            >
+              <SelectTrigger aria-label="Operator" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {OPERATOR_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {OPERATORS[key].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <form.Field name={`${path}.value`}>
+              {(field) =>
+                OPERATORS[operator.state.value].takesValue ? (
+                  <div className="grid gap-1">
+                    <Input
+                      aria-label="Value"
+                      placeholder={
+                        operator.state.value === 'in'
+                          ? 'admin, editor'
+                          : 'value'
+                      }
+                      autoComplete="off"
+                      {...invalidProps(field.name, field.state.meta.errors)}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                    <FieldError
+                      fieldName={field.name}
+                      errors={field.state.meta.errors}
+                    />
+                  </div>
+                ) : (
+                  <span aria-hidden />
+                )
+              }
+            </form.Field>
+          </>
+        )}
+      </form.Field>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label="Remove condition"
+        onClick={onRemove}
+      >
+        <X />
+      </Button>
+    </div>
+  )
+}

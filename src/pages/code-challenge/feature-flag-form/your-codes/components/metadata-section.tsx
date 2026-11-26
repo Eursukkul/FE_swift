@@ -19,6 +19,7 @@ import { Textarea } from '#/components/ui/textarea'
 import { FLAG_TYPES } from '../model/schema'
 import type { FlagType } from '../model/schema'
 import type { FlagForm } from '../use-flag-form'
+import { invalidProps } from './field-errors'
 import { FormField } from './form-field'
 
 const FLAG_TYPE_LABELS: Record<FlagType, string> = {
@@ -38,10 +39,16 @@ export function MetadataSection({ form }: { form: FlagForm }) {
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <form.Field name="name">
           {(field) => (
-            <FormField label="Flag name" htmlFor={field.name}>
+            <FormField
+              label="Flag name"
+              htmlFor={field.name}
+              errors={field.state.meta.errors}
+              hint="Lowercase kebab-case, used as the key in the output."
+            >
               <Input
                 id={field.name}
                 name={field.name}
+                {...invalidProps(field.name, field.state.meta.errors)}
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
@@ -54,7 +61,11 @@ export function MetadataSection({ form }: { form: FlagForm }) {
 
         <form.Field name="type">
           {(field) => (
-            <FormField label="Flag type" htmlFor={field.name}>
+            <FormField
+              label="Flag type"
+              htmlFor={field.name}
+              errors={field.state.meta.errors}
+            >
               <Select
                 value={field.state.value}
                 onValueChange={(value) => field.handleChange(value as FlagType)}
@@ -79,11 +90,13 @@ export function MetadataSection({ form }: { form: FlagForm }) {
             <FormField
               label="Description"
               htmlFor={field.name}
+              errors={field.state.meta.errors}
               className="sm:col-span-2"
             >
               <Textarea
                 id={field.name}
                 name={field.name}
+                {...invalidProps(field.name, field.state.meta.errors)}
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}

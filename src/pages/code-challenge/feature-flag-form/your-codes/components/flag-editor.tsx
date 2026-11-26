@@ -1,5 +1,6 @@
 import { useFlagForm } from '../use-flag-form'
 import { MetadataSection } from './metadata-section'
+import { TargetingSection } from './targeting/targeting-section'
 
 export function FlagEditor() {
   const form = useFlagForm()
@@ -14,6 +15,7 @@ export function FlagEditor() {
       className="grid gap-5"
     >
       <MetadataSection form={form} />
+      <TargetingSection form={form} />
     </form>
   )
 }
