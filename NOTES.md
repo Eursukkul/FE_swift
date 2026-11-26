@@ -8,6 +8,68 @@ pnpm dev     # http://localhost:3000/code-challenge/feature-flag-form
 pnpm test    # 61 tests
 ```
 
+## Key Requirements → ใช้ในโปรเจกต์อย่างไร
+
+| Requirement         | ใช้อะไร                                                                                                       | ไฟล์หลัก                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **Form Management** | `@tanstack/react-form`: `useForm`, `form.Field`, `mode="array"`, `form.Subscribe`                             | `use-flag-form.ts`, `components/**`                         |
+| **Validation**      | `zod`: schema เดียวทั้งฟอร์ม (recursive) ต่อเข้าเป็น validator ของฟอร์ม                                       | `model/schema.ts`, `use-flag-form.ts`                       |
+| **Live Preview**    | `form.Subscribe` → `toOutput()` → `@monaco-editor/react` (อ่านอย่างเดียว)                                     | `components/preview/json-preview.tsx`, `model/to-output.ts` |
+| **Dynamic Fields**  | array field (`pushValue` / `removeValue` / `moveFieldValues`) ใน 3 ระดับ: variations, rules, group ที่ซ้อนกัน | `components/variations/`, `components/targeting/`           |
+
+### 1. Form Management — `@tanstack/react-form`
+
+- **สร้างฟอร์มที่เดียว**: `useFlagForm()` เรียก `useForm({ defaultValues, validators })` ค่าเริ่มต้นคือ `DEFAULT_FLAG` (= expected.json) แล้วส่ง `form` ลงไปให้ทุก section
+- **`form.Field` ต่อ 1 input**: ทุกช่องผูกกับ path ของตัวเอง เช่น `name`, `variations[0].value`, `targeting[0].conditions.children[1].attribute`, `targeting[0].percentage` พิมพ์ช่องหนึ่งจึง render ใหม่เฉพาะช่องนั้น
+- **`mode="array"`** สำหรับ list ทั้ง 3 ระดับ (variations, targeting, `children` ของ group) ทำให้ list render ใหม่เฉพาะตอนเพิ่ม/ลบ/ย้าย
+- **`form.Subscribe` + selector** ใช้เฉพาะจุดที่ต้องอ่านค่าข้าม field:
+  - JSON preview อ่านทั้งฟอร์ม และเป็นจุดเดียวที่ทำแบบนี้
+  - query ใต้แต่ละ rule อ่านเฉพาะ rule ของตัวเอง
+  - dropdown เลือก variation อ่านเฉพาะรายการ variations
+  - ช่องกรอกค่า variation อ่านเฉพาะ flag type
+- **`listeners.onChange`** บนช่อง flag type: เปลี่ยนชนิดแล้ว `setFieldValue` รีเซ็ตค่าของ variation ที่ใช้กับชนิดใหม่ไม่ได้
+- **Nested form ลึกไม่จำกัด**: `ConditionGroup` render ตัวเองซ้ำตาม path ส่วน type ของฟอร์มรู้จัก group แค่ชั้นแรกเพื่อเลี่ยง TS2589 (อธิบายด้านล่าง)
+
+### 2. Validation — `zod`
+
+- **Schema เดียว** `flagFormSchema` ใน `model/schema.ts` ครอบคลุมทั้งฟอร์ม type ทั้งหมด (`Condition`, `Variation`, `Rule`, `FlagFormValues`) ได้จาก `z.infer` จึงไม่ต้องประกาศ type ซ้ำ
+- **Recursive**: `groupSchema` ใช้ getter ของ zod 4 (`get children()`) จึง validate group ที่ซ้อนได้ทุกชั้น
+- **ต่อเข้าฟอร์ม** ผ่าน `validators.onChange` (ใช้ `standardSchemaValidators` ของ TanStack) แล้ว TanStack กระจาย issue ไปที่ field ตาม path ให้เอง
+- **กฎที่ตรวจ**:
+  - Flag: ชื่อห้ามว่างและต้องเป็น kebab-case, คำอธิบายไม่เกิน 280 ตัว
+  - Variations: ต้องมีอย่างน้อย 2 ตัว, ชื่อห้ามว่าง/ห้ามซ้ำ, ค่าต้องตรงกับ flag type (boolean / number / JSON ที่ parse ได้)
+  - Rule: ต้องเลือก variation ที่ยังมีอยู่, rollout เป็นจำนวนเต็ม 0–100
+  - Condition: attribute ห้ามว่างและต้องเป็นชื่อที่ถูกต้อง, value ห้ามว่าง (ยกเว้น operator "Is present")
+  - Group: ห้ามว่าง
+  - Default rule: ต้องเลือก variation ที่ยังมีอยู่
+- **แสดงผล**: ใต้ช่องแสดง issue แรกพร้อมกรอบแดง (`aria-invalid` + `aria-describedby`) ส่วนใน preview มีสรุปจำนวนและตำแหน่ง เช่น `Rule 1 › Group 2 › Condition 1 › Value — Value is required`
+
+### 3. Live Preview — `@monaco-editor/react`
+
+- `JsonPreview` ใช้ `form.Subscribe(state => state.values)` ทุกครั้งที่ค่าเปลี่ยนจะ `toOutput()` → `JSON.stringify` → แสดงใน Monaco ทันที ตามคำแนะนำ (Tip) ในหน้าโจทย์
+- "JSON Schema" ในโจทย์ตีความว่าเป็น **JSON output ของ flag ตาม expected.json** ไม่ใช่เอกสาร JSON Schema
+- มี badge `Valid` / `N issues`, รายการ error ที่บอกตำแหน่ง และปุ่ม Copy
+- ใต้แต่ละ rule แสดง query ที่คำนวณจาก group ทันทีด้วย
+- เปิดหน้ามา output ตรงกับ expected.json (มี test ยืนยัน)
+
+### 4. Dynamic Fields
+
+| ระดับ                   | เพิ่ม                                            | ลบ                                        | อื่นๆ                                                                            |
+| ----------------------- | ------------------------------------------------ | ----------------------------------------- | -------------------------------------------------------------------------------- |
+| **Variations**          | ✅ ตั้งชื่อใหม่ไม่ซ้ำให้อัตโนมัติ                | ✅ (ต้องเหลืออย่างน้อย 2)                 | ช่องกรอกค่าเปลี่ยนตาม flag type, เปลี่ยนชื่อแล้ว rule ไม่หลุดเพราะอ้างด้วย id    |
+| **Targeting Rules**     | ✅                                               | ✅                                        | ลากเรียงลำดับได้ (drag & drop / ↑↓), เลือก variation + rollout %                 |
+| **Conditions / Groups** | ✅ "+ Condition" / "+ Group" ซ้อนได้ไม่จำกัดชั้น | ✅ (group ว่างจะขึ้น error ให้เติมหรือลบ) | AND / OR ต่อ group, operator 11 ตัวของ GoFeatureFlag, ลากเรียงในกลุ่มเดียวกันได้ |
+| **Default rule**        | —                                                | —                                         | เลือก variation ที่ใช้เมื่อไม่มี rule ไหนตรง                                     |
+
+### Test ที่ยืนยันแต่ละข้อ
+
+| Requirement     | Test                                                                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Form Management | `flag-editor.test.tsx`: input แสดงค่าจาก form state และพิมพ์แล้วค่าเปลี่ยน                                                            |
+| Validation      | `schema.test.ts` (กฎทุกข้อรวม path ใน group ที่ซ้อน), `flag-editor.test.tsx` / `targeting-section.test.tsx` (error ขึ้นและหายถูกช่อง) |
+| Live Preview    | `json-preview.test.tsx`: เท่ากับ expected.json, อัปเดตทันทีเมื่อแก้ชื่อ/สวิตช์/targeting, รายการ issue                                |
+| Dynamic Fields  | `variations-section.test.tsx`, `targeting-section.test.tsx` (สร้าง rule ที่มี group ซ้อนตั้งแต่ต้น), `reorder.test.tsx`               |
+
 ## โครงสร้าง
 
 ```
