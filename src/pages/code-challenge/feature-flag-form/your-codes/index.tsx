@@ -1,12 +1,14 @@
 import Header from '#/components/features/header'
+import { FlagEditor } from './components/flag-editor'
 
 function YourCode() {
   return (
     <section>
       <Header
-        title="Create Your Code Here"
-        subTitle="คุณสามารถเขียนโค้ดของคุณได้ที่นี่และลบโค๊ดตัวอย่างทิ้งได้เลย"
+        title="Feature Flag Editor"
+        subTitle="Configure a flag, its variations and targeting rules."
       />
+      <FlagEditor />
     </section>
   )
 }
